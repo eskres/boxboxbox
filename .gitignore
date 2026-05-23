@@ -15,6 +15,7 @@ venv/
 dist/
 .next/
 coverage/
+*.tsbuildinfo
 
 .idea/
 .vscode/
