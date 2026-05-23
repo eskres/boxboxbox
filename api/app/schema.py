@@ -19,12 +19,6 @@ class PitStopType:
     constructor_id: Optional[str]
 
 @strawberry.type
-class SeasonRaceType:
-    id: int
-    official_name: str
-    round: int
-
-@strawberry.type
 class DriverPitStopType:
     driver_id: str
     constructor_id: str
@@ -41,4 +35,5 @@ class SeasonRaceType:
     id: int
     official_name: str
     round: int
+    year: int
     total_pit_time: int
