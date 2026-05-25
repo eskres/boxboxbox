@@ -7,10 +7,10 @@ export interface TreemapContext {
     y: ScaleLinear<number, number>;
     width: number;
     height: number;
-    groupRef: { current: Selection<SVGGElement, unknown, any, any> };
+    groupRef: { current: Selection<SVGGElement, unknown, null, undefined> };
     rootRef: { current: RectNode };
     currentNodeNameRef: { current: string | null };
     onZoomCompleteRef: { current: ((node: TreeNode) => void) | undefined };
-    render: (group: Selection<SVGGElement, unknown, any, any>, displayRoot: RectNode) => void;
+    render: (group: Selection<SVGGElement, unknown, null, undefined>, displayRoot: RectNode) => void;
     dataRef: { current: TreeNode };
 }

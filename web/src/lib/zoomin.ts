@@ -5,6 +5,7 @@ import type { TreemapContext } from "./treemapContext";
 
 export function zoomin(d: RectNode, ctx: TreemapContext) {
     const { groupRef, svg, x, y, width, currentNodeNameRef, onZoomCompleteRef, render } = ctx;
+    const parent = d.parent;
 
     currentNodeNameRef.current = d.data.name;
     const group0 = groupRef.current.attr("pointer-events", "none");
@@ -17,7 +18,8 @@ export function zoomin(d: RectNode, ctx: TreemapContext) {
     svg.transition()
         .duration(750)
         .call((t) => {
-            positionTransition(group0.transition(t as unknown as GT).remove(), d.parent!, x, y, width);
+            if (!parent) return;
+            positionTransition(group0.transition(t as unknown as GT).remove(), parent, x, y, width);
         })
         .call((t) => {
             const tr = groupRef.current.transition(t as unknown as GT)

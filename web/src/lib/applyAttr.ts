@@ -3,7 +3,7 @@ import type { RectNode } from "./types";
 
 interface Positionable {
     select(selector: string): Positionable;
-    attr(name: string, value: (d: any) => string | number | null): Positionable;
+    attr(name: string, value: (d: RectNode) => string | number | null): Positionable;
 }
 
 export function applyAttr(

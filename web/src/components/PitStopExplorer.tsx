@@ -38,7 +38,7 @@ export function PitStopExplorer({ initialSeasons }: Props) {
                 });
                 const races = result.data?.racesBySeason ?? [];
                 setTreeData((prev) => graftRaces(prev, season.year, races));
-            } catch (e) {
+            } catch {
                 fetchingRacesRef.current.delete(season.year);
             }
         });
@@ -68,7 +68,7 @@ export function PitStopExplorer({ initialSeasons }: Props) {
                     });
                     const stops = result.data?.racePitStops ?? [];
                     setTreeData((prev) => graftDrivers(prev, raceId, stops));
-                } catch (e) {
+                } catch {
                     fetchingDriversRef.current.delete(raceId);
                 }
             });

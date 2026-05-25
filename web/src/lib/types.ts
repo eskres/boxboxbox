@@ -1,7 +1,7 @@
 import type { HierarchyRectangularNode, Transition, BaseType } from "d3";
 
 export type RectNode = HierarchyRectangularNode<TreeNode>;
-export type GT = Transition<BaseType, any, any, any>;
+export type GT = Transition<BaseType, unknown, null, undefined>;
 
 export interface Season {
     year: number;

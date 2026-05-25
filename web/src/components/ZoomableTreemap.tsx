@@ -61,10 +61,8 @@ export function ZoomableTreemap({ data, onZoomComplete }: Props) {
         const getName = (d: d3.HierarchyNode<TreeNode>) =>
             d.ancestors().reverse().map((d) => d.data.name).join(" / ");
 
-        let ctx: TreemapContext;
-
         function render(
-            group: d3.Selection<SVGGElement, unknown, any, any>,
+            group: d3.Selection<SVGGElement, unknown, null, undefined>,
             displayRoot: RectNode
         ) {
             const visibleNodes = displayRoot.children ?? [];
@@ -137,7 +135,7 @@ export function ZoomableTreemap({ data, onZoomComplete }: Props) {
         const groupRef = { current: svg.append<SVGGElement>("g") };
         const rootRef = { current: buildRoot(dataRef.current, width, height) };
 
-        ctx = {
+        const ctx: TreemapContext = {
             svg, x, y, width, height,
             groupRef, rootRef,
             currentNodeNameRef, onZoomCompleteRef,
