@@ -1,0 +1,100 @@
+name: Update F1DB
+
+on:
+  schedule:
+    - cron: '0 6 * * 3'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Reimport even if already on the latest version'
+        type: boolean
+        default: false
+
+jobs:
+  check-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get latest F1DB release
+        id: f1db
+        run: |
+          RELEASE=$(curl -sf https://api.github.com/repos/f1db/f1db/releases/latest)
+          TAG=$(echo "$RELEASE" | jq -r '.tag_name')
+          ASSET_URL=$(echo "$RELEASE" | jq -r \
+            '.assets[] | select(.name == "f1db-sql-postgresql.zip") | .browser_download_url')
+          echo "tag=$TAG"           >> "$GITHUB_OUTPUT"
+          echo "asset_url=$ASSET_URL" >> "$GITHUB_OUTPUT"
+          echo "Latest F1DB release: $TAG"
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      - name: Add VPS to known hosts
+        run: ssh-keyscan -H "${{ secrets.VPS_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Read current version from VPS
+        id: current
+        run: |
+          CURRENT=$(ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" \
+            "cat '${{ secrets.VPS_DEPLOY_PATH }}/f1db-version.txt' 2>/dev/null || echo none")
+          echo "version=$CURRENT" >> "$GITHUB_OUTPUT"
+          echo "Current F1DB on VPS: $CURRENT"
+
+      - name: Check if update is needed
+        id: needs_update
+        run: |
+          LATEST="${{ steps.f1db.outputs.tag }}"
+          CURRENT="${{ steps.current.outputs.version }}"
+          FORCE="${{ inputs.force }}"
+
+          if [ "$LATEST" = "$CURRENT" ] && [ "$FORCE" != "true" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "Already on $LATEST — nothing to do. Use force=true to reimport."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Will update: $CURRENT → $LATEST"
+          fi
+
+      - name: Download F1DB SQL dump
+        if: steps.needs_update.outputs.skip == 'false'
+        run: |
+          curl -fL "${{ steps.f1db.outputs.asset_url }}" -o f1db-sql-postgresql.zip
+          unzip -o f1db-sql-postgresql.zip
+          ls -lh f1db-sql-postgresql.sql
+
+      - name: Copy SQL dump to VPS
+        if: steps.needs_update.outputs.skip == 'false'
+        run: |
+          scp f1db-sql-postgresql.sql \
+            "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/f1db-update.sql"
+
+      - name: Import into Postgres, flush cache, record version
+        if: steps.needs_update.outputs.skip == 'false'
+        env:
+          TAG: ${{ steps.f1db.outputs.tag }}
+          DEPLOY_PATH: ${{ secrets.VPS_DEPLOY_PATH }}
+        run: |
+          ssh "${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}" bash << ENDSSH
+            set -e
+
+            echo "--- Importing F1DB $TAG ---"
+            CONTAINER=\$(docker compose -f "$DEPLOY_PATH/docker-compose.prod.yml" ps -q postgres)
+            docker exec -i "\$CONTAINER" psql -U f1 f1db < /tmp/f1db-update.sql
+
+            echo "--- Restarting API to flush Redis cache (if running) ---"
+            docker compose -f "$DEPLOY_PATH/docker-compose.prod.yml" restart api 2>/dev/null \
+              || echo "API not running yet, skipping cache flush."
+
+            echo "--- Recording version ---"
+            echo "$TAG" > "$DEPLOY_PATH/f1db-version.txt"
+
+            rm /tmp/f1db-update.sql
+            echo "Done. F1DB is now at $TAG."
+          ENDSSH
+
+      - name: Summary
+        if: steps.needs_update.outputs.skip == 'false'
+        run: |
+          echo "### F1DB updated to ${{ steps.f1db.outputs.tag }} ✅" >> "$GITHUB_STEP_SUMMARY"
+          echo "Redis cache flushed via API container restart." >> "$GITHUB_STEP_SUMMARY"
