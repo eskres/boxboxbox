@@ -1,0 +1,11 @@
+.git/
+.nx/
+node_modules/
+web/.next/
+web/node_modules/
+web-e2e/
+api/
+__pycache__/
+*.md
+.env
+.env.local
