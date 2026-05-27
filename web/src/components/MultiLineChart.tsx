@@ -36,6 +36,7 @@ export function MultiLineChart({ data, seriesOrder, seriesColors, xLabel, yLabel
         svg.attr("width", W).attr("height", H)
             .attr("viewBox", `0 0 ${W} ${H}`)
             .style("font", "13px Jost, sans-serif")
+            .style("fill", "#0b121e")
             .style("overflow", "visible");
 
         const x = d3.scaleLinear().domain(xExtent).range([ml, W - mr]);
