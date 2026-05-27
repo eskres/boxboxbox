@@ -55,15 +55,22 @@ jobs:
     needs: build-push-api
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Encode compose file
+        run: echo "COMPOSE_B64=$(base64 -w 0 docker-compose.prod.yml)" >> $GITHUB_ENV
+
       - uses: appleboy/ssh-action@v1
         env:
           GCHR_TOKEN: ${{ secrets.GCHR_TOKEN }}
+          COMPOSE_B64: ${{ env.COMPOSE_B64 }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GCHR_TOKEN
+          envs: GCHR_TOKEN,COMPOSE_B64
           script: |
+            echo "$COMPOSE_B64" | base64 -d > ${{ secrets.VPS_DEPLOY_PATH }}/docker-compose.prod.yml
             echo "$GCHR_TOKEN" | docker login ghcr.io -u eskres --password-stdin
             cd ${{ secrets.VPS_DEPLOY_PATH }}
             docker compose -f docker-compose.prod.yml pull api
@@ -115,15 +122,22 @@ jobs:
     needs: build-push-web
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Encode compose file
+        run: echo "COMPOSE_B64=$(base64 -w 0 docker-compose.prod.yml)" >> $GITHUB_ENV
+
       - uses: appleboy/ssh-action@v1
         env:
           GCHR_TOKEN: ${{ secrets.GCHR_TOKEN }}
+          COMPOSE_B64: ${{ env.COMPOSE_B64 }}
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          envs: GCHR_TOKEN
+          envs: GCHR_TOKEN,COMPOSE_B64
           script: |
+            echo "$COMPOSE_B64" | base64 -d > ${{ secrets.VPS_DEPLOY_PATH }}/docker-compose.prod.yml
             echo "$GCHR_TOKEN" | docker login ghcr.io -u eskres --password-stdin
             cd ${{ secrets.VPS_DEPLOY_PATH }}
             docker compose -f docker-compose.prod.yml pull web
