@@ -1,51 +1,54 @@
-# F1 GraphQL API
+# BoxBoxBox
 
-A Python GraphQL API serving F1 pit stop data. Built as a learning project to explore FastAPI, Strawberry, and async SQLAlchemy.
-
-Data is sourced from [F1DB](https://github.com/f1db/f1db), an open source Formula 1 database.
+Explore Formula 1 race data through interactive charts and visualisations.
 
 ## Stack
 
- - FastAPI
- - Strawberry GraphQL
- - SQLAlchemy 2.0
- - asyncpg
- - PostgreSQL
- - Docker
+**Infra**
+- Docker
+- Python 3.12+
+- Node.js 22+
 
-## Set up - Docker and Python 3.11+.
+**Backend**
+- FastAPI
+- Strawberry GraphQL
+- SQLAlchemy 2.0
+- OpenF1 API proxy with Redis caching and rate limiting
+- PostgreSQL with F1DB, containerised with Docker
+
+**Frontend**
+- Next.js (App Router)
+- D3.js
+- Tailwind CSS
+
+## Local development
 
 ```bash
-docker compose up -d
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
 cp .env.example .env
+docker compose up -d
+npm ci
+```
+
+### API
+```bash
+cd api && pip install -r requirements.txt
 uvicorn main:app --reload
+```
+
+### Web
+```bash
+npx nx serve web
 ```
 
 ## Database setup
 
-Download the latest PostgreSQL export from the
-[F1DB releases page](https://github.com/f1db/f1db/releases),
-then restore it into the running container:
+Download the latest PostgreSQL export from the [F1DB releases page](https://github.com/f1db/f1db/releases), then restore it:
 
 ```bash
-cat f1db-sql-postgresql.sql | docker exec -i graphql-api-postgres-1 psql -U f1 f1db
+cat f1db-sql-postgresql.sql | docker exec -i <postgres-container> psql -U f1 f1db
 ```
 
-## Example query
+## Data sources
 
-```graphql
-query {
-  pitStops(raceId: 550) {
-    driverId
-    stop
-    lap
-    timeMillis
-  }z
-}
-```
-
-## Limitations
-Partial models have been defined for the Driver and Race tables as well as the Pit Stop view. All remaining tables are unmapped and unavailable to query.
+- [F1DB](https://github.com/f1db/f1db) - historical race results and pit stop data
+- [OpenF1](https://openf1.org) - live and recent session telemetry
