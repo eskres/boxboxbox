@@ -6,7 +6,7 @@ import { computeYCap } from "@/lib/multiline/capOutliers";
 import { computeBoxStats } from "@/lib/boxplot/computeStats";
 import type { BoxStats, BoxPlotChartProps } from "@/lib/boxplot/types";
 
-export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel }: BoxPlotChartProps) {
+export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel, numLapsLabel }: BoxPlotChartProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const svgRef = useRef<SVGSVGElement>(null);
 
@@ -14,6 +14,11 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel 
         if (!svgRef.current || !containerRef.current || data.length === 0) return;
 
         const fmtY = formatY ?? String;
+
+        const lapsCompleted = new Map<string, number>();
+        for (const d of data) {
+            if (d.x > (lapsCompleted.get(d.series) ?? 0)) lapsCompleted.set(d.series, d.x);
+        }
 
         const cap = computeYCap(data);
         const cappedData = data.map(d => ({ ...d, y: Math.min(d.y, cap) }));
@@ -24,7 +29,7 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel 
 
         const W = containerRef.current.clientWidth;
         const H = 420;
-        const mt = 20, mb = 50, ml = 70, mr = 20;
+        const mt = numLapsLabel ? 36 : 20, mb = 50, ml = 70, mr = 20;
 
         const color = (key: string): string =>
             seriesColors?.[key] ?? d3.schemeTableau10[keys.indexOf(key) % d3.schemeTableau10.length] ?? "#888";
@@ -52,11 +57,12 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel 
                 .attr("x2", W - ml - mr)
                 .attr("stroke-opacity", 0.1));
 
-        svg.append("g").attr("transform", `translate(0,${H - mb})`)
+        const xAxisG = svg.append("g").attr("transform", `translate(0,${H - mb})`)
             .call(d3.axisBottom(x))
-            .call(g => g.select(".domain").remove())
-            .selectAll("text")
-            .attr("font-size", 11);
+            .call(g => g.select(".domain").remove());
+
+        xAxisG.selectAll("text").attr("font-size", 11);
+
 
         if (yLabel) {
             svg.append("text")
@@ -110,6 +116,20 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel 
                     .attr("r", 2.5)
                     .attr("fill", c).attr("fill-opacity", 0.7)
                     .attr("stroke", "none");
+            }
+        }
+
+        if (numLapsLabel) {
+            for (const s of stats) {
+                const cx = (x(s.key) ?? 0) + bw / 2;
+                const laps = lapsCompleted.get(s.key);
+                if (laps != null) {
+                    svg.append("text")
+                        .attr("x", cx).attr("y", mt - 6)
+                        .attr("text-anchor", "middle").attr("font-size", 11)
+                        .attr("fill", "#888")
+                        .text(`${laps} laps`);
+                }
             }
         }
 

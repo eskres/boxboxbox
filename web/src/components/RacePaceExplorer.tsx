@@ -179,6 +179,7 @@ export function RacePaceExplorer() {
                             const secs = v % 60;
                             return `${mins}:${secs.toFixed(3).padStart(6, '0')}`;
                         }}
+                        numLapsLabel={driverFilter === null}
                     />
                 </>
             )}

@@ -18,4 +18,5 @@ export interface BoxPlotChartProps {
     seriesColors?: Record<string, string>;
     formatY?: (v: number) => string;
     yLabel?: string;
+    numLapsLabel?: boolean;
 }
