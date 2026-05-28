@@ -27,9 +27,9 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
 
         const keys = stats.map(s => s.key);
 
-        const W = containerRef.current.clientWidth;
-        const H = 420;
         const mt = numLapsLabel ? 36 : 20, mb = 50, ml = 70, mr = 20;
+        const W = Math.max(containerRef.current.clientWidth, keys.length * 60 + ml + mr);
+        const H = 420;
 
         const color = (key: string): string =>
             seriesColors?.[key] ?? d3.schemeTableau10[keys.indexOf(key) % d3.schemeTableau10.length] ?? "#888";
