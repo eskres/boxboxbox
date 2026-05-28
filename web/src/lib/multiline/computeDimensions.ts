@@ -1,4 +1,4 @@
-import type { ChartDimensions } from "../types";
+import type { ChartDimensions } from "./types";
 
 const ITEM_W = 75;
 const MIN_PX_PER_X = 16;

@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import type { MultiLineDatum } from "../types";
+import type { MultiLineDatum } from "./types";
 
 export function computeYCap(data: MultiLineDatum[], factor = 1.07): number {
     const validYVals = data.map(d => d.y).filter(v => isFinite(v) && v > 0).sort(d3.ascending);

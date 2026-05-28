@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MultiLineChart } from "@/components/MultiLineChart";
 import { RetryCountdown } from "@/components/RetryCountdown";
-import type { MultiLineDatum, RaceSession, RaceLapsResponse } from "@/lib/types";
+import type { MultiLineDatum, RaceSession, RaceLapsResponse } from "@/lib/multiline/types";
 
 export function LapTimeChart() {
     const [sessions, setSessions] = useState<RaceSession[]>([]);

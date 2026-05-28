@@ -2,15 +2,15 @@
 
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import { buildRedScale } from "@/lib/buildRedScale";
-import { positionSelection } from "@/lib/positionSelection";
-import { zoomin } from "@/lib/zoomin";
-import { zoomout } from "@/lib/zoomout";
-import { redraw } from "@/lib/redraw";
-import { buildRoot } from "@/lib/buildRoot";
+import { buildRedScale } from "@/lib/treemap/buildRedScale";
+import { positionSelection } from "@/lib/treemap/positionSelection";
+import { zoomin } from "@/lib/treemap/zoomin";
+import { zoomout } from "@/lib/treemap/zoomout";
+import { redraw } from "@/lib/treemap/redraw";
+import { buildRoot } from "@/lib/treemap/buildRoot";
 import { uid } from "@/lib/uid";
-import type { TreeNode, RectNode } from "@/lib/types";
-import type { TreemapContext } from "@/lib/treemapContext";
+import type { TreeNode, RectNode } from "@/lib/treemap/types";
+import type { TreemapContext } from "@/lib/treemap/treemapContext";
 
 interface Props {
     data: TreeNode;

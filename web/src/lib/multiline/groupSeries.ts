@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import type { MultiLineDatum } from "../types";
+import type { MultiLineDatum } from "./types";
 
 export function groupSeries(
     data: MultiLineDatum[],

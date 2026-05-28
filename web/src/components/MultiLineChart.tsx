@@ -2,11 +2,11 @@
 
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import type { MultiLineDatum, MultiLineChartProps } from "../lib/types";
-import { computeYCap, buildRawLookup } from "../lib/multiline/capOutliers";
-import { groupSeries } from "../lib/multiline/groupSeries";
-import { computeChartDimensions } from "../lib/multiline/computeDimensions";
-import { highlightSeries, restoreSeries } from "../lib/multiline/highlight";
+import type { MultiLineDatum, MultiLineChartProps } from "@/lib/multiline/types";
+import { computeYCap, buildRawLookup } from "@/lib/multiline/capOutliers";
+import { groupSeries } from "@/lib/multiline/groupSeries";
+import { computeChartDimensions } from "@/lib/multiline/computeDimensions";
+import { highlightSeries, restoreSeries } from "@/lib/multiline/highlight";
 
 export type { MultiLineDatum };
 
