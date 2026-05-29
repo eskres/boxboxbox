@@ -31,13 +31,15 @@ npm ci
 
 ### API
 ```bash
-cd api && pip install -r requirements.txt
+cd api
+python3 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
 ### Web
 ```bash
-npx nx serve web
+npx nx dev web
 ```
 
 ## Database setup
