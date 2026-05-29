@@ -15,11 +15,6 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
 
         const fmtY = formatY ?? String;
 
-        const lapsCompleted = new Map<string, number>();
-        for (const d of data) {
-            if (d.x > (lapsCompleted.get(d.series) ?? 0)) lapsCompleted.set(d.series, d.x);
-        }
-
         const cap = computeYCap(data);
         const cappedData = data.map(d => ({ ...d, y: Math.min(d.y, cap) }));
 
@@ -28,7 +23,7 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
         const keys = stats.map(s => s.key);
 
         const mt = numLapsLabel ? 36 : 20, mb = 50, ml = 70, mr = 20;
-        const W = Math.max(containerRef.current.clientWidth, keys.length * 60 + ml + mr);
+        const W = Math.max(containerRef.current.clientWidth, keys.length * 50 + ml + mr);
         const H = 420;
 
         const color = (key: string): string =>
@@ -57,11 +52,10 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
                 .attr("x2", W - ml - mr)
                 .attr("stroke-opacity", 0.1));
 
-        const xAxisG = svg.append("g").attr("transform", `translate(0,${H - mb})`)
+        svg.append("g").attr("transform", `translate(0,${H - mb})`)
             .call(d3.axisBottom(x))
-            .call(g => g.select(".domain").remove());
-
-        xAxisG.selectAll("text").attr("font-size", 11);
+            .call(g => g.select(".domain").remove())
+            .call(g => g.selectAll("text").attr("font-size", 11));
 
 
         if (yLabel) {
@@ -120,6 +114,10 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
         }
 
         if (numLapsLabel) {
+            const lapsCompleted = new Map<string, number>();
+            for (const d of data) {
+                if (d.x > (lapsCompleted.get(d.series) ?? 0)) lapsCompleted.set(d.series, d.x);
+            }
             for (const s of stats) {
                 const cx = (x(s.key) ?? 0) + bw / 2;
                 const laps = lapsCompleted.get(s.key);
@@ -195,7 +193,7 @@ export function BoxPlotChart({ data, seriesOrder, seriesColors, formatY, yLabel,
                 .on("pointerleave", () => tooltipG.style("display", "none"));
         }
 
-    }, [data, seriesOrder, seriesColors, formatY, yLabel]);
+    }, [data, seriesOrder, seriesColors, formatY, yLabel, numLapsLabel]);
 
     return (
         <div ref={containerRef} className="w-full overflow-x-auto">
