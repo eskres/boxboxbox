@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi_cache import FastAPICache
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.cache import MONTH_TTL, RECENT_RACE_TTL, WEEK_TTL
+from app.cache import MONTH_TTL, RECENT_RACE_TTL
 from app.database import get_session
 from app.queries import get_race_results, get_season_driver_map
 
@@ -165,7 +165,7 @@ async def race_sessions():
 
     races.sort(key=lambda s: s.get("date_start", ""), reverse=True)
 
-    await FastAPICache.get_backend().set(cache_key, json.dumps(races), expire=WEEK_TTL)
+    await FastAPICache.get_backend().set(cache_key, json.dumps(races), expire=RECENT_RACE_TTL)
     return races
 
 
