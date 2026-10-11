@@ -4,9 +4,9 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { apolloClient } from "@/lib/apollo-client";
 import { RACES_BY_SEASON_QUERY, RACE_PIT_STOPS_QUERY } from "@/lib/queries";
 import { ZoomableTreemap } from "@/components/ZoomableTreemap";
-import { buildSeasonChildren, graftRaces, graftDrivers } from "@/lib/treeData";
-import type { TreeNode, Season } from "@/lib/types";
-import type { Race, DriverPitStop } from "@/lib/types";
+import { buildSeasonChildren, graftRaces, graftDrivers } from "@/lib/treemap/treeData";
+import type { TreeNode } from "@/lib/treemap/types";
+import type { Season, Race, DriverPitStop } from "@/lib/types";
 
 
 interface Props {

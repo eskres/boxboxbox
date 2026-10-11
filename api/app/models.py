@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Date
+from sqlalchemy import Column, Integer, String, Date, ForeignKey
 from app.database import Base
 
 class Driver(Base):
@@ -19,6 +19,18 @@ class Race(Base):
     official_name = Column(String)
     date = Column(Date)
     circuit_id = Column(String)
+
+class RaceData(Base):
+    __tablename__ = "race_data"
+
+    race_id = Column(Integer, ForeignKey("race.id"), primary_key=True)
+    type = Column(String, primary_key=True)
+    position_display_order = Column(Integer, primary_key=True)
+    driver_number = Column(String)
+    driver_id = Column(String, ForeignKey("driver.id"))
+    constructor_id = Column(String)
+    position_number = Column(Integer)
+
 
 class PitStop(Base):
     __tablename__ = "pit_stop"

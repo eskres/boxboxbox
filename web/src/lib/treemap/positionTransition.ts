@@ -11,4 +11,3 @@ export function positionTransition(
 ) {
     applyAttr(g.selectAll<SVGGElement, RectNode>("g"), displayRoot, x, y, width);
 }
-
