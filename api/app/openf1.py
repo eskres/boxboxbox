@@ -77,6 +77,18 @@ def _extract_colours(drivers: list) -> dict[str, str]:
     }
 
 
+async def _resolve_colours(of1_drivers: list, colours_cache_key: str) -> tuple[dict[str, str], bool]:
+    race_colours = _extract_colours(of1_drivers)
+    if race_colours:
+        await FastAPICache.get_backend().set(
+            colours_cache_key, json.dumps(race_colours), expire=MONTH_TTL
+        )
+        return race_colours, True
+
+    colours_raw = await FastAPICache.get_backend().get(colours_cache_key)
+    return (json.loads(colours_raw) if colours_raw else {}), False
+
+
 def _parse_sc_vsc(rc_data: list) -> tuple[list[list[int]], list[list[int]]]:
     sc_periods: list[list[int]] = []
     vsc_periods: list[list[int]] = []
@@ -116,7 +128,7 @@ async def _get_race_control(session_key: int) -> tuple[list[list[int]], list[lis
         res = await client.get(f"{OPENF1_BASE}/race_control?session_key={session_key}")
 
     rc_data = _safe_json(res)
-    if not isinstance(rc_data, list):
+    if not rc_data or not isinstance(rc_data, list):
         return [], []
 
     sc_periods, vsc_periods = _parse_sc_vsc(rc_data)
@@ -165,13 +177,14 @@ async def race_sessions():
 
     races.sort(key=lambda s: s.get("date_start", ""), reverse=True)
 
-    await FastAPICache.get_backend().set(cache_key, json.dumps(races), expire=RECENT_RACE_TTL)
+    if races and meeting_names:
+        await FastAPICache.get_backend().set(cache_key, json.dumps(races), expire=RECENT_RACE_TTL)
     return races
 
 
 @router.get("/race-laps")
 async def race_laps(session_key: int, db: AsyncSession = Depends(get_session)):
-    cache_key = f"openf1:race_laps:v4:{session_key}"
+    cache_key = f"openf1:race_laps:v5:{session_key}"
     cached = await FastAPICache.get_backend().get(cache_key)
     if cached:
         result = json.loads(cached)
@@ -209,26 +222,16 @@ async def race_laps(session_key: int, db: AsyncSession = Depends(get_session)):
         driver_map: dict[int, str] = {row.driver_number: row.abbreviation for row in db_results}
         final_position: dict[int, int] = {row.driver_number: i + 1 for i, row in enumerate(db_results)}
 
-        colours_raw = await FastAPICache.get_backend().get(colours_cache_key)
-
+        _check_bucket(2)
         async with httpx.AsyncClient(timeout=30.0) as client:
-            if colours_raw:
-                _check_bucket(1)
-                laps_res = await client.get(f"{OPENF1_BASE}/laps?session_key={session_key}")
-                driver_colors: dict[str, str] = json.loads(colours_raw)
-            else:
-                _check_bucket(2)
-                laps_res, drivers_res = await asyncio.gather(
-                    client.get(f"{OPENF1_BASE}/laps?session_key={session_key}"),
-                    client.get(f"{OPENF1_BASE}/drivers?session_key={session_key}"),
-                )
-                of1_drivers = _safe_json(drivers_res)
-                of1_drivers = of1_drivers if isinstance(of1_drivers, list) else []
-                driver_colors = _extract_colours(of1_drivers)
-                if driver_colors:
-                    await FastAPICache.get_backend().set(
-                        colours_cache_key, json.dumps(driver_colors), expire=MONTH_TTL
-                    )
+            laps_res, drivers_res = await asyncio.gather(
+                client.get(f"{OPENF1_BASE}/laps?session_key={session_key}"),
+                client.get(f"{OPENF1_BASE}/drivers?session_key={session_key}"),
+            )
+
+        of1_drivers = _safe_json(drivers_res)
+        of1_drivers = of1_drivers if isinstance(of1_drivers, list) else []
+        driver_colors, colours_from_race = await _resolve_colours(of1_drivers, colours_cache_key)
 
         result_ttl = MONTH_TTL
 
@@ -245,15 +248,7 @@ async def race_laps(session_key: int, db: AsyncSession = Depends(get_session)):
         of1_drivers = _safe_json(drivers_res)
         of1_drivers = of1_drivers if isinstance(of1_drivers, list) else []
 
-        colours_raw = await FastAPICache.get_backend().get(colours_cache_key)
-        if not colours_raw:
-            driver_colors = _extract_colours(of1_drivers)
-            if driver_colors:
-                await FastAPICache.get_backend().set(
-                    colours_cache_key, json.dumps(driver_colors), expire=MONTH_TTL
-                )
-        else:
-            driver_colors = json.loads(colours_raw)
+        driver_colors, colours_from_race = await _resolve_colours(of1_drivers, colours_cache_key)
 
         driver_map = dict(season_driver_map)
         for d in of1_drivers:
@@ -292,7 +287,7 @@ async def race_laps(session_key: int, db: AsyncSession = Depends(get_session)):
         and not lap.get("is_pit_out_lap", False)
     ]
 
-    if laps_data and driver_map:
+    if laps_data and driver_map and driver_order and colours_from_race:
         await FastAPICache.get_backend().set(
             cache_key,
             json.dumps({
